@@ -157,7 +157,9 @@ def text_encryption(initial_text, keyword):
 
     encrypted_text_value_list = []
     i = 0
-    last_value = 0
+    last_value = sum(keyword_value_list)
+    while last_value > len(characters_list):
+        last_value -= len(characters_list)
     for value in initial_text_value_list:
         encrypted_text_character_value = value + (keyword_value_list[i] + last_value)
         while encrypted_text_character_value >= len(characters_list):
@@ -199,14 +201,17 @@ def text_decryption(initial_text, keyword):
                 initial_text_value_list.append(i)
             i += 1
 
-    encrypted_text_value_list = []
+    decrypted_text_value_list = []
     i = 0
-    last_value = 0
+    last_value = sum([len(characters_list) - value for value in keyword_value_list])
+    while last_value > len(characters_list):
+        last_value -= len(characters_list)
+    last_value = len(characters_list) - last_value
     for value in initial_text_value_list:
-        encrypted_text_character_value = value + (keyword_value_list[i] + last_value)
-        while encrypted_text_character_value >= len(characters_list):
-            encrypted_text_character_value -= len(characters_list)
-        encrypted_text_value_list.append(encrypted_text_character_value)
+        decrypted_text_character_value = value + (keyword_value_list[i] + last_value)
+        while decrypted_text_character_value >= len(characters_list):
+            decrypted_text_character_value -= len(characters_list)
+        decrypted_text_value_list.append(decrypted_text_character_value)
         last_value = keyword_value_list[i] + last_value
         while last_value >= len(characters_list):
             last_value -= len(characters_list)
@@ -214,14 +219,14 @@ def text_decryption(initial_text, keyword):
         if i == len(keyword_value_list):
             i = 0
 
-    encrypted_text_character_list = []
-    for value in encrypted_text_value_list:
+    decrypted_text_character_list = []
+    for value in decrypted_text_value_list:
         for i in range(len(characters_list)):
             if i == value:
-                encrypted_text_character_list.append(characters_list[i])
+                decrypted_text_character_list.append(characters_list[i])
                 break
-    encrypted_text = "".join(encrypted_text_character_list)
-    return encrypted_text
+    decrypted_text = "".join(decrypted_text_character_list)
+    return decrypted_text
 
 
 def program_run(keyword=DEFAULT, show_initial_text=False, is_encryption=True):
