@@ -1,5 +1,6 @@
 
 DEFAULT = "Ta mère en short"
+previous_input = []
 
 
 def characters_list_generator():
@@ -10,26 +11,30 @@ def characters_list_generator():
     return characters_list
 
 
-def show_user_commands():
-    print('Write "-code" to encrypt your text.')
-    print('Write "-decode" to decrypt your text.')
-    print('Write "-exit" to end the program.')
-    print('Write "-help" to view these commands again.')
-    print('Write "-init" to show initial text.')
-    print('Write "-keyword" to change the keyword.')
-    print('Write "-noinit" to hide initial text.')
-    print('Write "-reset" to restore the default parameters.')
-    print('Write "-status" to view active parameters.')
-    print("----------------------------------------------")
+def show_help(cmd):
+    if cmd == "-help":
+        print('Write "-code" to encrypt your text.')
+        print('Write "-decode" to decrypt your text.')
+        print('Write "-exit" to end the program.')
+        print('Write "-help" to view these commands again.')
+        print('Write "-init" to show initial text.')
+        print('Write "-keyword" to change the keyword.')
+        print('Write "-noinit" to hide initial text.')
+        print('Write "-reset" to restore the default parameters.')
+        print('Write "-status" to view active parameters.')
+        print("----------------------------------------------")
+        print()
     return
 
 
-def check_if_command_in_user_input(initial_text, command_list, i=0):
+def check_if_command_in_user_input(initial_text, i=0):
+    cmd_list = ("-code", "-decode", "-exit", "-reset", "-keyword", "-init", "-noinit", "-help", "-status")
+
     if len(initial_text) == 0:
         print("Please write at least one character.")
         return ValueError
 
-    command_list_order_of_execution = []
+    user_cmd = []
     while i in range(len(initial_text)):
         possible_command_list = []
         if initial_text[i] == " ":
@@ -40,19 +45,19 @@ def check_if_command_in_user_input(initial_text, command_list, i=0):
                 i += 1
                 if i == len(initial_text):
                     possible_command_str = "".join(possible_command_list)
-                    if any([command in possible_command_str for command in command_list]):
-                        for command in command_list:
+                    if any([command in possible_command_str for command in cmd_list]):
+                        for command in cmd_list:
                             if possible_command_str == command:
-                                command_list_order_of_execution.append(command)
-                                return command_list_order_of_execution
+                                user_cmd.append(command)
+                                return user_cmd
                     else:
                         print('Invalid command. Please write "-help" to see valid user commands.')
                         return []
             possible_command_str = "".join(possible_command_list)
-            if any([command in possible_command_str for command in command_list]):
-                for command in command_list:
+            if any([command in possible_command_str for command in cmd_list]):
+                for command in cmd_list:
                     if possible_command_str == command:
-                        command_list_order_of_execution.append(command)
+                        user_cmd.append(command)
                         i += 1
                         break
             else:
@@ -65,50 +70,69 @@ def check_if_command_in_user_input(initial_text, command_list, i=0):
     return []
 
 
-def show_status(keyword, show_initial_text, is_encryption):
-    print(f"The current keyword is : '{keyword}'")
-    if show_initial_text:
+def show_status(cmd, keyword, show_initial_text, is_encryption):
+    if cmd == "-status":
+        print(f"The current keyword is : '{keyword}'")
+        if show_initial_text:
+            print("Initial text will be shown.")
+        else:
+            print("Initial text will not be shown.")
+        if is_encryption:
+            print("Text will be encrypted.")
+        else:
+            print("Text will be decrypted.")
+        print()
+    return
+
+
+def program_end(cmd):
+    if cmd == "-exit":
+        print("Exiting program.")
+        print()
+        return True
+    return False
+
+
+def program_reset(cmd):
+    if cmd == "-reset":
+        print("Initial parameters restored.")
+        print()
+        return True
+    return False
+
+
+def replace_keyword(cmd, keyword):
+    if cmd == "-keyword":
+        print(f"The current keyword is : '{keyword}'")
+        new_keyword = input("Please write your new keyword : ")
+        print()
+        if new_keyword == "":
+            return keyword
+        return new_keyword
+    return keyword
+
+
+def show_initial_text_toggle(cmd, show_initial_text):
+    if cmd == "-init":
         print("Initial text will be shown.")
-    else:
+        print()
+        return True
+    if cmd == "-noinit":
         print("Initial text will not be shown.")
-    if is_encryption:
+        print()
+        return False
+    return show_initial_text
+
+
+def encryption_toggle(cmd, is_encryption):
+    if cmd == "-code":
         print("Text will be encrypted.")
-    else:
+        print()
+        return True
+    if cmd == "-decode":
         print("Text will be decrypted.")
-    return
-
-
-def program_end(is_end):
-    print("Exiting program.")
-    return is_end
-
-
-def program_reset(is_reset):
-    print("Initial parameters restored.")
-    return is_reset
-
-
-def replace_keyword(keyword):
-    print(f"The current keyword is : '{keyword}'")
-    new_keyword = input("Please write your new keyword : ")
-    if new_keyword == "":
-        return keyword
-    return new_keyword
-
-
-def show_initial_text_toggle(show_initial_text):
-    if show_initial_text:
-        print("Initial text will be shown.")
-        return
-    print("Initial text will not be shown.")
-    return
-
-
-def encryption_toggle(is_encryption):
-    if is_encryption:
-        print("Text will be encrypted.")
-        return is_encryption
-    print("Text will be decrypted.")
+        print()
+        return False
     return is_encryption
 
 
@@ -200,42 +224,28 @@ def text_decryption(initial_text, keyword):
     return encrypted_text
 
 
-def program_run(keyword=DEFAULT, show_initial_text=False, is_encryption=True, is_reset=False, is_end=False):
+def program_run(keyword=DEFAULT, show_initial_text=False, is_encryption=True):
     initial_text = input("Please write or copy your text here : ")
 
     # Check for user command in text.
-    cmd_list = {
-        "-code": [is_encryption, encryption_toggle, [True]],
-        "-decode": [is_encryption, encryption_toggle, [False]],
-        "-exit": [is_end, program_end, [True]],
-        "-reset": [is_reset, program_reset, [True]],
-        "-keyword": [keyword, replace_keyword, [keyword]],
-        "-init": [show_initial_text, show_initial_text_toggle, [True]],
-        "-noinit": [show_initial_text, show_initial_text_toggle, [False]],
-        "-help": [show_user_commands, []],
-        "-status": [show_status, (keyword, show_initial_text, is_encryption)],
-    }
-
-    command_list_order_of_execution = check_if_command_in_user_input(initial_text, cmd_list)
-    if command_list_order_of_execution == ValueError:
+    user_cmd = check_if_command_in_user_input(initial_text)
+    if user_cmd == ValueError:
         print()
         return program_run(keyword, show_initial_text, is_encryption)
-    if len(command_list_order_of_execution) > 0:
-        for user_command in command_list_order_of_execution:
-            if len(cmd_list[user_command]) < 3:
-                cmd_list[user_command][0](*cmd_list[user_command][1])
-            else:
-                cmd_list[user_command][0] = cmd_list[user_command][1](*cmd_list[user_command][2])
-            # if cmd_list["-exit"]:
-            #     return
-            # if cmd_list["-reset"]:
-            #     return program_run()
-        print()
-        return program_run(
-            keyword=cmd_list["-keyword"][0],
-            show_initial_text=cmd_list["-init"][0],
-            is_encryption=cmd_list["-code"][0]
-        )
+
+    # execute program cmd in order of apparition
+    if len(user_cmd) > 0:
+        for cmd in user_cmd:
+            if program_end(cmd):
+                return
+            if program_reset(cmd):
+                return program_run()
+            show_help(cmd)
+            show_status(cmd, keyword, show_initial_text, is_encryption)
+            is_encryption = encryption_toggle(cmd, is_encryption)
+            show_initial_text = show_initial_text_toggle(cmd, show_initial_text)
+            keyword = replace_keyword(cmd, keyword)
+        return program_run(keyword, show_initial_text, is_encryption)
 
     # Program execution when text is detected.
     if is_encryption:
@@ -250,15 +260,11 @@ def program_run(keyword=DEFAULT, show_initial_text=False, is_encryption=True, is
         print("ORIGINAL TEXT : ")
         print(initial_text)
     print()
-    return program_run(
-            keyword=cmd_list["-keyword"][0],
-            show_initial_text=cmd_list["-init"][0],
-            is_encryption=cmd_list["-code"][0]
-        )
+    return program_run(keyword, show_initial_text, is_encryption)
 
 
 # Comment next line to not show commands at program start.
-show_user_commands()
+show_help("-help")
 print()
 
 # Change "DEFAULT" value on line 3 to replace default keyword.
