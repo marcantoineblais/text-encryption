@@ -4,11 +4,11 @@ previous_input = []
 
 
 def characters_list_generator():
-    characters_list = [chr(i) for i in range(32, 127)]
+    characters = [chr(i) for i in range(32, 127)]
     for i in range(192, 382):
-        characters_list.append(chr(i))
-    characters_list.append("’")
-    return characters_list
+        characters.append(chr(i))
+    characters.append("’")
+    return characters
 
 
 def show_help(cmd):
@@ -136,42 +136,45 @@ def encryption_toggle(cmd, is_encryption):
     return is_encryption
 
 
-def text_encryption(initial_text, keyword):
-    characters_list = characters_list_generator()
-
-    keyword_value_list = []
-    for value in keyword:
+def value_calc(text):
+    value_list = []
+    for value in text:
         i = 0
         while i in range(len(characters_list)):
             if value == characters_list[i]:
-                keyword_value_list.append(i)
+                value_list.append(i)
+                break
             i += 1
+    return value_list
 
-    initial_text_value_list = []
-    for value in initial_text:
+
+def reverse_value_calc(text):
+    value_list = []
+    for value in text:
         i = 0
         while i in range(len(characters_list)):
             if value == characters_list[i]:
-                initial_text_value_list.append(i)
+                value_list.append(len(characters_list) - i)
+                break
             i += 1
+    return value_list
 
+
+def encrypted_text_value_gen(keyword_value_list, initial_text_value_list, first_value):
     encrypted_text_value_list = []
     i = 0
-    last_value = sum(keyword_value_list)
-    while last_value > len(characters_list):
-        last_value -= len(characters_list)
+    last_value = first_value
     for value in initial_text_value_list:
-        encrypted_text_character_value = value + (keyword_value_list[i] + last_value)
-        while encrypted_text_character_value >= len(characters_list):
-            encrypted_text_character_value -= len(characters_list)
+        encrypted_text_character_value = (value + (keyword_value_list[i] + last_value)) % len(characters_list)
         encrypted_text_value_list.append(encrypted_text_character_value)
-        last_value = keyword_value_list[i] + last_value
-        while last_value >= len(characters_list):
-            last_value -= len(characters_list)
+        last_value = (keyword_value_list[i] + last_value) % len(characters_list)
         i += 1
         if i == len(keyword_value_list):
             i = 0
+    return encrypted_text_value_list
 
+
+def encrypted_text_gen(encrypted_text_value_list):
     encrypted_text_character_list = []
     for value in encrypted_text_value_list:
         for i in range(len(characters_list)):
@@ -182,51 +185,38 @@ def text_encryption(initial_text, keyword):
     return encrypted_text
 
 
+def text_encryption(initial_text, keyword):
+    keyword_value_list = value_calc(keyword)
+    initial_text_value_list = value_calc(initial_text)
+    calc_value = sum(keyword_value_list) % len(characters_list)
+    encrypted_text_value_list = encrypted_text_value_gen(keyword_value_list, initial_text_value_list, calc_value)
+    encrypted_text = encrypted_text_gen(encrypted_text_value_list)
+    return encrypted_text
+
+
 def text_decryption(initial_text, keyword):
-    characters_list = characters_list_generator()
-
-    keyword_value_list = []
-    for character in keyword:
-        i = 0
-        while i in range(len(characters_list)):
-            if character == characters_list[i]:
-                keyword_value_list.append(len(characters_list) - i)
-            i += 1
-
-    initial_text_value_list = []
-    for character in initial_text:
-        i = 0
-        while i in range(len(characters_list)):
-            if character == characters_list[i]:
-                initial_text_value_list.append(i)
-            i += 1
-
-    decrypted_text_value_list = []
-    i = 0
-    last_value = sum([len(characters_list) - value for value in keyword_value_list])
-    while last_value > len(characters_list):
-        last_value -= len(characters_list)
-    last_value = len(characters_list) - last_value
-    for value in initial_text_value_list:
-        decrypted_text_character_value = value + (keyword_value_list[i] + last_value)
-        while decrypted_text_character_value >= len(characters_list):
-            decrypted_text_character_value -= len(characters_list)
-        decrypted_text_value_list.append(decrypted_text_character_value)
-        last_value = keyword_value_list[i] + last_value
-        while last_value >= len(characters_list):
-            last_value -= len(characters_list)
-        i += 1
-        if i == len(keyword_value_list):
-            i = 0
-
-    decrypted_text_character_list = []
-    for value in decrypted_text_value_list:
-        for i in range(len(characters_list)):
-            if i == value:
-                decrypted_text_character_list.append(characters_list[i])
-                break
-    decrypted_text = "".join(decrypted_text_character_list)
+    keyword_value_list = reverse_value_calc(keyword)
+    initial_text_value_list = value_calc(initial_text)
+    calc_value = len(characters_list) - (sum([len(characters_list) - value for value in keyword_value_list]))
+    decrypted_text_value_list = encrypted_text_value_gen(keyword_value_list, initial_text_value_list, calc_value)
+    decrypted_text = encrypted_text_gen(decrypted_text_value_list)
     return decrypted_text
+
+
+def run_text_encryption(is_encryption, initial_text, keyword, show_initial_text):
+    if is_encryption:
+        computed_text = text_encryption(initial_text, keyword)
+    else:
+        computed_text = text_decryption(initial_text, keyword)
+    print()
+    print("MODIFIED TEXT : ")
+    print(computed_text)
+    if show_initial_text:
+        print("----------------------------------------------")
+        print("ORIGINAL TEXT : ")
+        print(initial_text)
+    print()
+    return
 
 
 def program_run(keyword=DEFAULT, show_initial_text=False, is_encryption=True):
@@ -253,24 +243,15 @@ def program_run(keyword=DEFAULT, show_initial_text=False, is_encryption=True):
         return program_run(keyword, show_initial_text, is_encryption)
 
     # Program execution when text is detected.
-    if is_encryption:
-        computed_text = text_encryption(initial_text, keyword)
-    else:
-        computed_text = text_decryption(initial_text, keyword)
-    print()
-    print("MODIFIED TEXT : ")
-    print(computed_text)
-    if show_initial_text:
-        print("----------------------------------------------")
-        print("ORIGINAL TEXT : ")
-        print(initial_text)
-    print()
+    run_text_encryption(is_encryption, initial_text, keyword, show_initial_text)
     return program_run(keyword, show_initial_text, is_encryption)
 
 
 # Comment next line to not show commands at program start.
 show_help("-help")
-print()
+
+# Generate characters' list
+characters_list = characters_list_generator()
 
 # Change "DEFAULT" value on line 3 to replace default keyword.
 program_run()
