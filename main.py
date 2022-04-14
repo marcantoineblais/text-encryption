@@ -1,5 +1,5 @@
 
-DEFAULT = "Ta mère en short"
+DEFAULT = "This is an encryption key"
 previous_input = []
 
 
@@ -160,28 +160,28 @@ def reverse_value_calc(text):
     return value_list
 
 
-def encrypted_text_value_gen(keyword_value_list, initial_text_value_list, first_value):
-    encrypted_text_value_list = []
+def text_value_gen(keyword_value_list, initial_text_value_list, first_value):
+    text_value_list = []
     i = 0
     last_value = first_value
     for value in initial_text_value_list:
-        encrypted_text_character_value = (value + (keyword_value_list[i] + last_value)) % len(characters_list)
-        encrypted_text_value_list.append(encrypted_text_character_value)
+        text_character_value = (value + (keyword_value_list[i] + last_value)) % len(characters_list)
+        text_value_list.append(text_character_value)
         last_value = (keyword_value_list[i] + last_value) % len(characters_list)
         i += 1
         if i == len(keyword_value_list):
             i = 0
-    return encrypted_text_value_list
+    return text_value_list
 
 
-def encrypted_text_gen(encrypted_text_value_list):
-    encrypted_text_character_list = []
-    for value in encrypted_text_value_list:
+def text_gen(value_list):
+    character_list = []
+    for value in value_list:
         for i in range(len(characters_list)):
             if i == value:
-                encrypted_text_character_list.append(characters_list[i])
+                character_list.append(characters_list[i])
                 break
-    encrypted_text = "".join(encrypted_text_character_list)
+    encrypted_text = "".join(character_list)
     return encrypted_text
 
 
@@ -189,8 +189,8 @@ def text_encryption(initial_text, keyword):
     keyword_value_list = value_calc(keyword)
     initial_text_value_list = value_calc(initial_text)
     calc_value = sum(keyword_value_list) % len(characters_list)
-    encrypted_text_value_list = encrypted_text_value_gen(keyword_value_list, initial_text_value_list, calc_value)
-    encrypted_text = encrypted_text_gen(encrypted_text_value_list)
+    encrypted_text_value_list = text_value_gen(keyword_value_list, initial_text_value_list, calc_value)
+    encrypted_text = text_gen(encrypted_text_value_list)
     return encrypted_text
 
 
@@ -198,8 +198,8 @@ def text_decryption(initial_text, keyword):
     keyword_value_list = reverse_value_calc(keyword)
     initial_text_value_list = value_calc(initial_text)
     calc_value = len(characters_list) - (sum([len(characters_list) - value for value in keyword_value_list]))
-    decrypted_text_value_list = encrypted_text_value_gen(keyword_value_list, initial_text_value_list, calc_value)
-    decrypted_text = encrypted_text_gen(decrypted_text_value_list)
+    decrypted_text_value_list = text_value_gen(keyword_value_list, initial_text_value_list, calc_value)
+    decrypted_text = text_gen(decrypted_text_value_list)
     return decrypted_text
 
 
@@ -228,7 +228,7 @@ def program_run(keyword=DEFAULT, show_initial_text=False, is_encryption=True):
         print()
         return program_run(keyword, show_initial_text, is_encryption)
 
-    # execute program cmd in order of apparition
+    # execute user cmd in order of apparition
     if len(user_cmd) > 0:
         for cmd in user_cmd:
             if program_end(cmd):
